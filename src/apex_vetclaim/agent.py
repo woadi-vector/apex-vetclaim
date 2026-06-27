@@ -14,6 +14,7 @@ from apex_vetclaim.tools.check_rating_schedule import check_rating_schedule
 from apex_vetclaim.tools.draft_personal_statement import draft_personal_statement
 from apex_vetclaim.tools.evidence_gap_check import evidence_gap_check
 from apex_vetclaim.tools.review_secondary_conditions import review_secondary_conditions
+from apex_vetclaim.tools.review_past_decisions import review_past_decisions
 from apex_vetclaim.tools.search_va_precedent import search_va_precedent
 
 # Allow `adk run apex_vetclaim` to pick up env from .env if present
@@ -37,5 +38,6 @@ root_agent = Agent(
         FunctionTool(func=evidence_gap_check),
         FunctionTool(func=draft_personal_statement),
         FunctionTool(func=search_va_precedent),
+        FunctionTool(func=review_past_decisions),
     ],
 )

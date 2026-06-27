@@ -61,9 +61,33 @@ async def _run_agent(user_text: str) -> str:
     return final_text or "(The agent returned no text. Try rephrasing your question.)"
 
 
+def _split_text_for_blocks(text: str, chunk_size: int = 2900) -> list[str]:
+    """Split text into Slack-safe chunks, preferring to break on paragraph boundaries."""
+    if len(text) <= chunk_size:
+        return [text]
+
+    chunks = []
+    remaining = text
+    while len(remaining) > chunk_size:
+        # Try to split on the last paragraph break before the limit
+        split_at = remaining.rfind("\n\n", 0, chunk_size)
+        if split_at == -1:
+            # Fall back to last newline
+            split_at = remaining.rfind("\n", 0, chunk_size)
+        if split_at == -1 or split_at < chunk_size // 2:
+            # Fall back to hard split
+            split_at = chunk_size
+        chunks.append(remaining[:split_at].rstrip())
+        remaining = remaining[split_at:].lstrip()
+    if remaining:
+        chunks.append(remaining)
+    return chunks
+
+
 def _agent_response_to_slack_blocks(user_text: str, agent_text: str) -> list[dict]:
-    """Format the agent's response as Slack Block Kit for clean rendering."""
-    return [
+    """Format the agent's response as Slack Block Kit. Long responses are split
+    across multiple section blocks rather than truncated."""
+    blocks = [
         {
             "type": "context",
             "elements": [
@@ -73,7 +97,10 @@ def _agent_response_to_slack_blocks(user_text: str, agent_text: str) -> list[dic
                 }
             ],
         },
-        {"type": "section", "text": {"type": "mrkdwn", "text": agent_text[:2900]}},
+    ]
+    for chunk in _split_text_for_blocks(agent_text, chunk_size=2900):
+        blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": chunk}})
+    blocks.append(
         {
             "type": "context",
             "elements": [
@@ -82,8 +109,9 @@ def _agent_response_to_slack_blocks(user_text: str, agent_text: str) -> list[dic
                     "text": "_APEX VetClaim surfaces information from the VA rating schedule. *It does not file claims, give legal advice, or replace a VSO.* Always confirm with an accredited VSO before acting on what you read here._",
                 }
             ],
-        },
-    ]
+        }
+    )
+    return blocks
 
 
 @app.command("/vetclaim")
