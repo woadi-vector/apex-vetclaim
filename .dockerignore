@@ -1,0 +1,12 @@
+.git/
+.github/
+.venv/
+.devcontainer/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+.DS_Store
+src/apex_vetclaim/evals/reports/
+*.log
+node_modules/

@@ -20,6 +20,30 @@
 
 Six-tool ADK agent on **Gemini 2.5 Flash** via **Vertex AI**, with a **Slack frontend** (Bolt for Python in Socket Mode) and **Arize Phoenix MCP** as the partner-observability integration:
 
+slack_bot (Bolt + Socket Mode)
+
+│
+
+└── invocation [apex_vetclaim]
+
+└── agent_run [apex_vetclaim_agent]
+
+├── call_llm (planner)
+
+├── execute_tool check_rating_schedule       (deterministic 38 CFR lookup)
+
+├── execute_tool review_secondary_conditions (deterministic secondary map)
+
+├── execute_tool evidence_gap_check          (Gemini sub-call)
+
+├── execute_tool draft_personal_statement    (Gemini sub-call, fidelity-anchored)
+
+├── execute_tool search_va_precedent         (BVA precedent lookup; live MCP path post-hackathon)
+
+├── execute_tool review_past_decisions       (@arizeai/phoenix-mcp subprocess; runtime self-review)
+
+└── call_llm (synthesis)
+
 `review_past_decisions` fires on borderline cases — low confidence, unusual condition combinations, appeal/denial scenarios, or conflicting tool results. The agent consults its own Phoenix trace history before finalizing the response. This is the second-loop pattern Arize's track copy explicitly rewards: observability data flows back into the agent's decision-making, not just into the dashboard.
 
 ## Eval pipeline
